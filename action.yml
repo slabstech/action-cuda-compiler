@@ -1,0 +1,58 @@
+name: "action-cuda-compiler"
+description: "build cuda c++ for ubuntu"
+inputs:
+  cuda:
+    required: true
+    description: "Set the cuda version"
+  gcc:
+    required: true
+    description: "Set the gcc version"
+  config:
+    required: true
+    description: "Cmake build type"
+  build_dir:
+    required: true
+    description: "Directory for cmake build"
+  cmake_path:
+    required: false
+    description: "Add path for CMakeLists.txt"
+
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: "Install CUDA"
+      env:
+        cuda: ${{ inputs.cuda }}
+      run: ./scripts/install_cuda_ubuntu.sh
+      shell: bash
+
+    # Specify the correct host compilers
+    - name: "Install/Select gcc and g++"
+      run: |
+        sudo apt-get install -y gcc-${{ inputs.gcc }} g++-${{ inputs.gcc }}
+        echo "CC=/usr/bin/gcc-${{ inputs.gcc }}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/g++-${{ inputs.gcc }}" >> $GITHUB_ENV
+        echo "CUDAHOSTCXX=/usr/bin/g++-${{ inputs.gcc }}" >> $GITHUB_ENV
+    - name: "Configure cmake"
+      id: configure
+      run: cmake {{ inputs.cmake_path }}. -B ${{ inputs.build_dir }} -DCMAKE_BUILD_TYPE=${{ inputs.config }}
+
+    - name: "Configure Error Processing"
+      if: ${{ failure() && steps.configure.outcome == 'failure' }}
+      working-directory: ${{ inputs.build_dir }}
+      run: |
+        if [[ -f "CMakeFiles/CMakeOutput.log" ]]; then
+          echo "---- CMakeFiles/CMakeOutput.log"
+          cat CMakeFiles/CMakeOutput.log
+          echo "----"
+        fi
+        if [[ -f "CMakeFiles/CMakeError.log" ]]; then
+          echo "---- CMakeFiles/CMakeError.log"
+          cat CMakeFiles/CMakeError.log
+          echo "----"
+        fi
+    - name: "Build everything else"
+      working-directory: ${{ inputs.build_dir }}
+      run: cmake --build . --target all --verbose -j `nproc`
