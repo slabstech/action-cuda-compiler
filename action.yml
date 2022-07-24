@@ -30,6 +30,7 @@ runs:
 
     # Specify the correct host compilers
     - name: "Install/Select gcc and g++"
+      shell: bash
       run: |
         sudo apt-get install -y gcc-${{ inputs.gcc }} g++-${{ inputs.gcc }}
         echo "CC=/usr/bin/gcc-${{ inputs.gcc }}" >> $GITHUB_ENV
@@ -38,10 +39,12 @@ runs:
     - name: "Configure cmake"
       id: configure
       run: cmake {{ inputs.cmake_path }}. -B ${{ inputs.build_dir }} -DCMAKE_BUILD_TYPE=${{ inputs.config }}
+      shell: bash
 
     - name: "Configure Error Processing"
       if: ${{ failure() && steps.configure.outcome == 'failure' }}
       working-directory: ${{ inputs.build_dir }}
+
       run: |
         if [[ -f "CMakeFiles/CMakeOutput.log" ]]; then
           echo "---- CMakeFiles/CMakeOutput.log"
@@ -53,6 +56,8 @@ runs:
           cat CMakeFiles/CMakeError.log
           echo "----"
         fi
+      shell: bash
     - name: "Build everything else"
       working-directory: ${{ inputs.build_dir }}
       run: cmake --build . --target all --verbose -j `nproc`
+      shell: bash
