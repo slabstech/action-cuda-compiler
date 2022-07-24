@@ -7,10 +7,10 @@ inputs:
   gcc:
     required: true
     description: "Set the gcc version"
-  config:
+  action_config:
     required: true
     description: "Cmake build type"
-  build_dir:
+  action_build_dir:
     required: true
     description: "Directory for cmake build"
   cmake_path:
