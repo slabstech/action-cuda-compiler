@@ -38,7 +38,7 @@ runs:
         echo "CUDAHOSTCXX=/usr/bin/g++-${{ inputs.gcc }}" >> $GITHUB_ENV
     - name: "Configure cmake"
       id: configure
-      run: cmake {{inputs.action_cmake_path}}. -B ${{inputs.action_build_dir}} -DCMAKE_BUILD_TYPE=${{inputs.action_config}}
+      run: cmake ${{inputs.action_cmake_path}}. -B ${{inputs.action_build_dir}} -DCMAKE_BUILD_TYPE=${{inputs.action_config}}
       shell: bash
 
     - name: "Configure Error Processing"
